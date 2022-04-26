@@ -45,7 +45,7 @@ def data_to_array(img_rows, img_cols):
 
     fileList =  os.listdir('../data/train/')
     fileList = filter(lambda x: '.mhd' in x, fileList)
-    fileList.sort()
+    fileList= sorted(fileList)
 
     val_list = [5,15,25,35,45]
     train_list = list( set(range(50)) - set(val_list) )
@@ -92,7 +92,7 @@ def data_to_array(img_rows, img_cols):
 
     fileList =  os.listdir('../data/test/')
     fileList = filter(lambda x: '.mhd' in x, fileList)
-    fileList.sort()
+    fileList= sorted(fileList)
     n_imgs=[]
     images=[]
     for filename in fileList:
@@ -139,7 +139,8 @@ def augment_validation_data(X_train, y_train, seed=10):
     image_generator = image_datagen.flow(X_train, batch_size=100, seed=seed)
     mask_generator = mask_datagen.flow(y_train, batch_size=100, seed=seed)
 
-    train_generator = zip(image_generator, mask_generator)
+    # train_generator = zip(image_generator, mask_generator)
+    train_generator = (pair for pair in zip(image_generator, mask_generator))
 
     count=0
     X_val = []
@@ -196,7 +197,8 @@ def keras_fit_generator(img_rows=96, img_cols=96, n_imgs=10**4, batch_size=32, r
     mask_datagen.fit(y_train, seed=seed)
     image_generator = image_datagen.flow(X_train, batch_size=batch_size, seed=seed)
     mask_generator = mask_datagen.flow(y_train, batch_size=batch_size, seed=seed)
-    train_generator = zip(image_generator, mask_generator)
+    # train_generator = zip(image_generator, mask_generator)
+    train_generator = (pair for pair in zip(image_generator, mask_generator))
 
     model = UNet((img_rows, img_cols,1), start_ch=8, depth=7, batchnorm=True, dropout=0.5, maxpool=True, residual=True)
     # model.load_weights('../data/weights.h5')
