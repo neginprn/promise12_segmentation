@@ -11,8 +11,8 @@ from collections import defaultdict
 import os, pickle, sys
 import shutil
 from functools import partial
+from loguru import logger 
 # from itertools import izip
-
 import cv2
 from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
@@ -27,6 +27,12 @@ from models import *
 from metrics import dice_coef, dice_coef_loss
 from augmenters import *
 
+logging.basicConfig(filename=filename,
+                        filemode='a',
+                        format='[%(asctime)s] {%(pathname)s:%(lineno)d} [%(levelname)s]: \n %(message)s',
+                        datefmt='%m/%d/%Y, %H:%M:%S',
+                        level=log_level)
+
 def img_resize(imgs, img_rows, img_cols, equalize=True):
 
     new_imgs = np.zeros([len(imgs), img_rows, img_cols])
@@ -36,6 +42,8 @@ def img_resize(imgs, img_rows, img_cols, equalize=True):
             # img = clahe.apply(cv2.convertScaleAbs(img))
 
         new_imgs[mm] = cv2.resize( img, (img_rows, img_cols), interpolation=cv2.INTER_NEAREST )
+        
+    logging.info(f'Imaged resized to: new_imgs.shape: {new_imgs.shape}')
 
     return new_imgs
 
@@ -80,14 +88,16 @@ def data_to_array(img_rows, img_cols):
             mu = np.mean(images)
             sigma = np.std(images)
             images = (images - mu)/sigma
-
             np.save('../data/X_train.npy', images)
             np.save('../data/y_train.npy', masks)
+            logging.info(f'X_train saved: shape: {images.shape}, min: {images.min()}, max: {images.max()}')
+            logging.info(f'y_train saved: shape: {masks.shape}, min: {masks.min()}, max: {masks.max()}')
         elif count==1:
             images = (images - mu)/sigma
-
             np.save('../data/X_val.npy', images)
             np.save('../data/y_val.npy', masks)
+            logging.info(f'X_val saved: shape: {images.shape}, min: {images.min()}, max: {images.max()}')
+            logging.info(f'y_val saved: shape: {masks.shape}, min: {masks.min()}, max: {masks.max()}')
         count+=1
 
     fileList =  os.listdir('../data/test/')
@@ -107,12 +117,16 @@ def data_to_array(img_rows, img_cols):
     images = (images - mu)/sigma
     np.save('../data/X_test.npy', images)
     np.save('../data/test_n_imgs.npy', np.array(n_imgs) )
+    logging.info(f'X_test saved: shape: {images.shape}, min: {images.min()}, max: {images.max()}')
+    logging.info(f'test_n_imgs saved: shape: {np.array(n_imgs).shape}, min: {np.array(n_imgs).min()}, max: {np.array(n_imgs).max()}')
 
 
 def load_data():
 
     X_train = np.load('../data/X_train.npy')
     y_train = np.load('../data/y_train.npy')
+    logging.info(f'X_train loaded: shape: {X_train.shape}, min: {X_train.min()}, max: {X_train.max()}')
+    logging.info(f'y_train loaded: shape: {y_train.shape}, min: {y_train.min()}, max: {y_train.max()}')
     X_val = np.load('../data/X_val.npy')
     y_val = np.load('../data/y_val.npy')
 
@@ -234,4 +248,4 @@ if __name__=='__main__':
 
     end = time.time()
 
-    print('Elapsed time:', round((end-start)/60, 2 ) )
+    logging.info('Elapsed time:', round((end-start)/60, 2 ) )
